@@ -1,0 +1,9 @@
+export * as application from '@iac-auth/config/application';
+export * as certificates from '@iac-auth/config/certificates';
+export * as crypto from '@iac-auth/config/crypto';
+export * as database from '@iac-auth/config/database';
+export * as jwt from '@iac-auth/config/jwt';
+export * as ldap from '@iac-auth/config/ldap';
+export * as oauth from '@iac-auth/config/oauth';
+export * as rate from '@iac-auth/config/rate';
+export * as redis from '@iac-auth/config/redis';

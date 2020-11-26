@@ -1,0 +1,32 @@
+FROM node:alpine AS server-builder
+
+WORKDIR /server
+
+COPY ./package.json .
+COPY ./yarn.lock .
+RUN yarn install
+COPY . .
+
+RUN yarn build
+RUN rm -R src
+
+FROM node:alpine AS front-builder
+
+WORKDIR /client
+
+COPY ./client/package.json .
+COPY ./client/yarn.lock .
+RUN yarn install
+COPY ./client .
+
+RUN yarn build
+RUN rm -R /client/src
+
+FROM node:alpine
+
+WORKDIR /application
+
+COPY --from=server-builder /server .
+COPY --from=front-builder /client ./client
+
+CMD ["yarn", "start:prod"]

@@ -1,0 +1,48 @@
+<html>
+    <head>
+        <title>Информация о подключенном клиенте - {{ client.name }}</title>
+        <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;700&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css" integrity="sha512-NhSC1YmyruXifcj/KFRWoC561YpHpc5Jtzgvbuzx5VozKpWvQ+4nXhPdFgmx8xqexRcpAglTj9sIBWINXa8x5w==" crossorigin="anonymous" />
+        <style type="text/css">
+            body { font-family: 'Roboto', sans-serif; }
+            h1 { margin-bottom: 0; text-transform: uppercase; }
+            h3 { font-weight: normal; font-size: 24px; }
+            article { width: 720px; margin-left: auto; margin-right: auto; }
+        </style>
+    </head>
+
+    <body>
+        <article>
+            <h1>{{ client.name }}</h1>
+            <h3>Информация для подключения к сервису единой авторизации</h3>
+
+            <p>
+                <b>ID клиента:</b> {{ client.id }}<br>
+                <b>Секретный ключ:</b> {{ client.secret }}
+            </p>
+
+            <br>
+
+            <p>
+                Для подключение к сервису или проекту подребуются два ключа — идентификатор клиента и секретный ключ.
+                Механизмы подключения могут быть любые доступные — сервис авторизации поддерживает как OAuth 2.0, так и OpenID протоколы.
+            </p>
+
+            <h3>Подключение</h3>
+            <p>Необходимо перенаправить пользователя по ссылке <code>http://192.168.18.153/oauth2/authorize</code></p>
+            <p>
+                С такими параметрами, как <code>client_id={{ client.id }}</code>&<code>response_type=code</code>&<code>redirect_uri={{ client.redirectUrls.[0] }}</code>
+                &<code>scope={{#each client.scopes}}{{ this }}+{{/each}}</code> и параметром <code>&state=</code>, значение которого должно содержать любую возможную строку
+                длинной не менее 8-ми символов.
+            </p>
+
+            <p>
+                При успешной авторизации на стороне сервиса пользователь будет перенаправлен на указанную ссылку редиректа в параметре <code>redirect_uri=</code> с новым параметром <code>&code=</code>
+                в котором будет содержаться ключ авторизации. Данный ключ необходимо будет отправить <code>POST</code> запросом на адрес <code>http://192.168.18.153/oauth2/token</code> с телом <code>{ code, client_id }</code>.
+                В ответе будет получен Bearer токен и срок действия токена.
+            </p>
+
+            <br>
+        </article>
+    </body>
+</html>

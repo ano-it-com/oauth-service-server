@@ -1,0 +1,84 @@
+stages:
+  - build
+  - build-docker
+  - deploy
+
+variables:
+  CURRENT_BASIC_CONTAINER_NAME: 192.168.18.66:5000/iac-open-auth/auth-backend:application-$CI_COMMIT_REF_NAME-latest
+  BASIC_CONTAINER_NAME: 192.168.18.66:5000/iac-open-auth/auth-backend:application-latest
+
+build:backend:
+  image: node:alpine
+  only:
+    - staging
+    - master
+  when: always
+  stage: build
+  cache:
+    key: 'backend-cache'
+    paths:
+      - node_modules
+  artifacts:
+    paths:
+      - node_modules
+      - dist
+    expire_in: 30 days
+  script:
+    - yarn install
+    - yarn build
+
+build:frontend:
+  image: node:alpine
+  only:
+    - staging
+    - master
+  when: always
+  stage: build
+  cache:
+    key: 'cache'
+    paths:
+      - client/node_modules
+  artifacts:
+    paths:
+      - client/views
+    expire_in: 30 days
+  script:
+    - cd client
+    - yarn install
+    - yarn build
+
+build:application:
+  image: docker:latest
+  only:
+    - staging
+    - master
+  when: always
+  dependencies:
+    - build:backend
+    - build:frontend
+  services:
+    - name: docker:dind
+      command: ["--insecure-registry", "192.168.18.66:5000"]
+  stage: build-docker
+  script:
+    - docker login 192.168.18.66:5000 -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD
+    - >
+      docker build --pull
+      --cache-from $BASIC_CONTAINER_NAME
+      --tag $BASIC_CONTAINER_NAME
+      .
+    - docker push $BASIC_CONTAINER_NAME
+    - docker tag $BASIC_CONTAINER_NAME $CURRENT_BASIC_CONTAINER_NAME
+    - docker push $CURRENT_BASIC_CONTAINER_NAME
+
+Deploy to staging:
+  image: docker:latest
+  stage: deploy
+  only:
+    - staging
+  tags:
+    - staging
+    - deploy
+  script:
+    - docker login 192.168.18.66:5000 -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD
+    - docker service update --with-registry-auth -q -d --image $CURRENT_BASIC_CONTAINER_NAME oauth-stack_application

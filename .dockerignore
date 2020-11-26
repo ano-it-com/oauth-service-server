@@ -1,0 +1,9 @@
+*
+!dist
+!node_modules
+!package.json
+!.env.example
+
+client/*
+!client/dist
+!client/views
